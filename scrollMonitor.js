@@ -1,6 +1,16 @@
-define(function( require, exports, module ) {
-
-	var $ = require('jquery');
+(function( factory ) {
+	if (typeof define !== 'undefined' && define.amd) {
+		define(['jquery'], factory);
+	} else if (typeof module !== 'undefined' && module.exports) {
+		var jQuery = require('jquery');
+		module.exports = factory( $ );
+	} else {
+		window.scrollMonitor = factory( $ );
+	}
+})(function( $ ) {
+	
+	var exports = {};
+	
 	var $window = $(window);
 	var $document = $(document);
 
@@ -11,8 +21,8 @@ define(function( require, exports, module ) {
 	var FULLYENTERVIEWPORT = 'fullyEnterViewport';
 	var EXITVIEWPORT = 'exitViewport';
 	var PARTIALLYEXITVIEWPORT = 'partiallyExitViewport';
-	var LOCATIONCHANGE = 'locationChange'
-	var STATECHANGE = 'stateChange'
+	var LOCATIONCHANGE = 'locationChange';
+	var STATECHANGE = 'stateChange';
 
 	var eventTypes = [
 		VISIBILITYCHANGE,
@@ -23,6 +33,8 @@ define(function( require, exports, module ) {
 		LOCATIONCHANGE,
 		STATECHANGE
 	];
+
+	var defaultOffsets = {top: 0, bottom: 0};
 
 	exports.viewportTop;
 	exports.viewportBottom;
@@ -68,7 +80,7 @@ define(function( require, exports, module ) {
 
 		updateAndTriggerWatchersI = watchers.length;
 		while( updateAndTriggerWatchersI-- ) {
-			watchers[updateAndTriggerWatchersI].triggerCallbacks()
+			watchers[updateAndTriggerWatchersI].triggerCallbacks();
 		}
 
 	}
@@ -79,14 +91,14 @@ define(function( require, exports, module ) {
 		this.watchItem = watchItem;
 		
 		if (!offsets) {
-			this.offsets = {top: 0, bottom: 0}
+			this.offsets = defaultOffsets;
 		} else if (offsets === +offsets) {
-			this.offsets = {top: offsets, bottom: offsets}
+			this.offsets = {top: offsets, bottom: offsets};
 		} else {
-			this.offsets = offsets;
+			this.offsets = $.extend({}, offsets, defaultOffsets);
 		}
 
-		this.callbacks = {} // {callback: function, isOne: true }
+		this.callbacks = {}; // {callback: function, isOne: true }
 
 		eventTypes.forEach(function(type) {
 			self.callbacks[type] = [];
@@ -94,10 +106,10 @@ define(function( require, exports, module ) {
 
 		this.locked = false;
 
-		var wasInViewport = this.isInViewport;
-		var wasFullyInViewport = this.isFullyInViewport;
-		var wasAboveViewport = this.isAboveViewport;
-		var wasBelowViewport = this.isBelowViewport;
+		var wasInViewport;
+		var wasFullyInViewport;
+		var wasAboveViewport;
+		var wasBelowViewport;
 
 		var listenerToTriggerListI;
 		var listener;
@@ -154,7 +166,7 @@ define(function( require, exports, module ) {
 				case wasFullyInViewport !== this.isFullyInViewport:
 				case wasAboveViewport !== this.isAboveViewport:
 				case wasBelowViewport !== this.isBelowViewport:
-				triggerCallbackArray( this.callbacks[STATECHANGE] );
+					triggerCallbackArray( this.callbacks[STATECHANGE] );
 			}
 
 			wasInViewport = this.isInViewport;
@@ -207,6 +219,11 @@ define(function( require, exports, module ) {
 
 		this.recalculateLocation();
 		this.update();
+
+		wasInViewport = this.isInViewport;
+		wasFullyInViewport = this.isFullyInViewport;
+		wasAboveViewport = this.isAboveViewport;
+		wasBelowViewport = this.isBelowViewport;
 	}
 
 	ElementWatcher.prototype = {
@@ -221,7 +238,7 @@ define(function( require, exports, module ) {
 				case event === PARTIALLYEXITVIEWPORT && this.isAboveViewport:
 					callback();
 					if (isOne) {
-						return
+						return;
 					}
 			}
 
@@ -279,7 +296,7 @@ define(function( require, exports, module ) {
 	eventTypes.forEach(function( type ) {
 		ElementWatcher.prototype[type] = function( callback, isOne) {
 			this.on.call(this, type, callback, isOne);
-		}
+		};
 	});
 
 
@@ -294,12 +311,12 @@ define(function( require, exports, module ) {
 	$window.on('scroll', scrollMonitorListener);
 	$window.on('resize', debouncedRecalcuateAndTrigger);
 
-	exports.beget = function( element, offsets ) {
+	exports.beget = exports.create = function( element, offsets ) {
 		if (typeof element === 'string') {
 			element = $(element)[0];
 		}
-		if (element instanceof jQuery) {
-			element = element[0]
+		if (element instanceof $) {
+			element = element[0];
 		}
 		var watcher = new ElementWatcher( element, offsets );
 		watchers.push(watcher);
@@ -316,4 +333,6 @@ define(function( require, exports, module ) {
 		exports.documentHeight = 0;
 		exports.update();
 	};
-})
+	
+	return exports;
+});
