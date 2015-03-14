@@ -1,6 +1,8 @@
 scrollMonitor
 =============
 
+TODO: document support for watching items in absolutely positioned, scrollable containers (like a bootstrap modal)
+
 The scroll monitor allows you to receive events when elements enter or exit the viewport. It does this using watcher objects, which watch an element and trigger events. Watcher objects also contain information about the element they watch, including the element's visibility and location relative to the viewport.
 
 The scroll monitor was designed to be very fast. On each scroll event the DOM is only touched twice, once to find the document height and again to find the viewport top. No variables are declared, nor are any objects, arrays, or strings created.
