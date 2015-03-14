@@ -105,6 +105,7 @@
 		var self = this;
 
 		this.watchItem = watchItem;
+		this.container = container;
 
 		if (!offsets) {
 			this.offsets = defaultOffsets;
@@ -287,13 +288,18 @@
 			this.bottom = this.top + this.height;
 		},
 		update: function() {
-			this.isAboveViewport = this.top < exports.viewportTop;
-			this.isBelowViewport = this.bottom > exports.viewportBottom;
-
-			this.isInViewport = (this.top <= exports.viewportBottom && this.bottom >= exports.viewportTop);
-			this.isFullyInViewport = (this.top >= exports.viewportTop && this.bottom <= exports.viewportBottom) ||
-								 (this.isAboveViewport && this.isBelowViewport);
-
+			var thisRect;
+			// support for scrollable containers
+			if(this.container){
+				thisRect = this.watchItem.getBoundingClientRect();
+			} else {
+				thisRect = this;
+			}
+			this.isAboveViewport = thisRect.top < exports.viewportTop;
+			this.isBelowViewport = thisRect.bottom > exports.viewportBottom;
+			this.isInViewport = (thisRect.top <= exports.viewportBottom && thisRect.bottom >= exports.viewportTop);
+			this.isFullyInViewport = (thisRect.top >= exports.viewportTop && thisRect.bottom <= exports.viewportBottom) ||
+			(thisRect.isAboveViewport && thisRect.isBelowViewport);
 		},
 		destroy: function() {
 			var index = watchers.indexOf(this),
@@ -353,6 +359,14 @@
 			element = document.querySelector(element);
 		} else if (element && element.length > 0) {
 			element = element[0];
+		}
+		if(container){
+			if (typeof container === 'string') {
+				container = document.querySelector(container);
+			} else if (container && container.length > 0) {
+				container = container[0];
+			}
+			container.addEventListener("scroll", scrollMonitorListener );
 		}
 
 		var watcher = new ElementWatcher( element, offsets );
