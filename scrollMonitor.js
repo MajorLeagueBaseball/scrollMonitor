@@ -354,7 +354,8 @@
 		window.attachEvent('onresize', debouncedRecalcuateAndTrigger);
 	}
 
-	exports.beget = exports.create = function( element, offsets, container ) {
+	exports.beget = exports.create = function( element, offsets, options ) {
+		var container = options.container;
 		if (typeof element === 'string') {
 			element = document.querySelector(element);
 		} else if (element && element.length > 0) {
