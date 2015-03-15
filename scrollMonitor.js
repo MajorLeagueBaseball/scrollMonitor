@@ -101,7 +101,7 @@
 
 	}
 
-	function ElementWatcher( watchItem, offsets ) {
+	function ElementWatcher( watchItem, offsets, container ) {
 		var self = this;
 
 		this.watchItem = watchItem;
@@ -354,7 +354,7 @@
 		window.attachEvent('onresize', debouncedRecalcuateAndTrigger);
 	}
 
-	exports.beget = exports.create = function( element, offsets ) {
+	exports.beget = exports.create = function( element, offsets, container ) {
 		if (typeof element === 'string') {
 			element = document.querySelector(element);
 		} else if (element && element.length > 0) {
@@ -369,7 +369,7 @@
 			container.addEventListener("scroll", scrollMonitorListener );
 		}
 
-		var watcher = new ElementWatcher( element, offsets );
+		var watcher = new ElementWatcher( element, offsets, container );
 		watchers.push(watcher);
 		watcher.update();
 		return watcher;
