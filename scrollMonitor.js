@@ -354,8 +354,35 @@
 		window.attachEvent('onresize', debouncedRecalcuateAndTrigger);
 	}
 
+
+	function hasClass(el, className){
+		var out;
+		if (el.classList) {
+			out = el.classList.contains(className);
+		} else {
+			out = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
+		}
+		return out;
+	}
+
+
+	function addClass(el, className){
+		if (el.classList) {
+			el.classList.add(className);
+		} else {
+			el.className += ' ' + className;
+		}
+	}
+
+
+
+	exports.getContainers = function(){
+		return containers.slice(0);
+	};
+
 	exports.beget = exports.create = function( element, offsets, options ) {
-		var container = options.container;
+		var container = options && options.container;
+		var className = "sm-watching";
 		if (typeof element === 'string') {
 			element = document.querySelector(element);
 		} else if (element && element.length > 0) {
@@ -367,9 +394,12 @@
 			} else if (container && container.length > 0) {
 				container = container[0];
 			}
-			container.addEventListener("scroll", scrollMonitorListener );
+			// add a class so we don't attach more than one listener to this element
+			if(!hasClass(container, className)){
+				addClass(container, className);
+				container.addEventListener("scroll", scrollMonitorListener );
+			}
 		}
-
 		var watcher = new ElementWatcher( element, offsets, container );
 		watchers.push(watcher);
 		watcher.update();
