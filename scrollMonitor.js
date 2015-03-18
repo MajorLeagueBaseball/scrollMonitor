@@ -259,6 +259,7 @@
 			}
 		};
 
+		// returns true if every property is 0
 		this.displayNone = function displayNone(obj) {
 			for (var prop in obj) {
 				if (obj[prop] !== 0) {
@@ -323,16 +324,12 @@
 			this.bottom = this.top + this.height;
 		},
 		update: function() {
-
-
 			var thisRect;
-			// support for scrollable containers
-			if(this.scrollMonitor.$container){
-				thisRect = this.watchItem.getBoundingClientRect();
-			} else {
+			if(isWindowScrollMonitor(this.scrollMonitor.$container)){
 				thisRect = this;
+			} else {
+				thisRect = this.watchItem.getBoundingClientRect();
 			}
-
 			if(this.displayNone(thisRect)){
 				this.isAboveViewport = false;
 				this.isBelowViewport = false;
@@ -345,20 +342,6 @@
 				this.isFullyInViewport = (thisRect.top >= this.scrollMonitor.viewportTop && thisRect.bottom <= this.scrollMonitor.viewportBottom) ||
 				(thisRect.isAboveViewport && thisRect.isBelowViewport);
 			}
-
-
-
-
-			//allPropsAreZero(thisRect)
-
-			//debugger;
-			//this.isAboveViewport = this.top < this.scrollMonitor.viewportTop;
-			//this.isBelowViewport = this.bottom > this.scrollMonitor.viewportBottom;
-			//
-			//this.isInViewport = (this.top <= this.scrollMonitor.viewportBottom && this.bottom >= this.scrollMonitor.viewportTop);
-			//this.isFullyInViewport = (this.top >= this.scrollMonitor.viewportTop && this.bottom <= this.scrollMonitor.viewportBottom) ||
-			//					 (this.isAboveViewport && this.isBelowViewport);
-
 		},
 		destroy: function() {
 			var index = this.scrollMonitor.watchers.indexOf(this),
