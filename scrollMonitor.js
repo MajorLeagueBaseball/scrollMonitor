@@ -1,20 +1,18 @@
 (function( factory ) {
 	if (typeof define !== 'undefined' && define.amd) {
-		define([], factory);
+		define(['jquery'], factory);
 	} else if (typeof module !== 'undefined' && module.exports) {
-		module.exports = factory();
+		var jQuery = require('jquery');
+		module.exports = factory( $ );
 	} else {
-		window.scrollMonitor = factory();
+		window.scrollMonitor = factory( $ );
 	}
-})(function() {
-
-	var scrollTop = function() {
-		return window.pageYOffset ||
-			(document.documentElement && document.documentElement.scrollTop) ||
-			document.body.scrollTop;
-	};
-
+})(function( $ ) {
+	
 	var exports = {};
+	
+	var $window = $(window);
+	var $document = $(document);
 
 	var watchers = [];
 
@@ -38,33 +36,19 @@
 
 	var defaultOffsets = {top: 0, bottom: 0};
 
-	var getViewportHeight = function() {
-		return window.innerHeight || document.documentElement.clientHeight;
-	};
-
-	var getDocumentHeight = function() {
-		// jQuery approach
-		// whichever is greatest
-		return Math.max(
-			document.body.scrollHeight, document.documentElement.scrollHeight,
-			document.body.offsetHeight, document.documentElement.offsetHeight,
-			document.documentElement.clientHeight
-		);
-	};
-
-	exports.viewportTop = null;
-	exports.viewportBottom = null;
-	exports.documentHeight = null;
-	exports.viewportHeight = getViewportHeight();
+	exports.viewportTop;
+	exports.viewportBottom;
+	exports.documentHeight;
+	exports.viewportHeight = $window.height();
 
 	var previousDocumentHeight;
 	var latestEvent;
 
 	var calculateViewportI;
 	function calculateViewport() {
-		exports.viewportTop = scrollTop();
+		exports.viewportTop = $window.scrollTop();
 		exports.viewportBottom = exports.viewportTop + exports.viewportHeight;
-		exports.documentHeight = getDocumentHeight();
+		exports.documentHeight = $document.height();
 		if (exports.documentHeight !== previousDocumentHeight) {
 			calculateViewportI = watchers.length;
 			while( calculateViewportI-- ) {
@@ -75,7 +59,7 @@
 	}
 
 	function recalculateWatchLocationsAndTrigger() {
-		exports.viewportHeight = getViewportHeight();
+		exports.viewportHeight = $window.height();
 		calculateViewport();
 		updateAndTriggerWatchers();
 	}
@@ -101,28 +85,24 @@
 
 	}
 
-	function ElementWatcher( watchItem, offsets, container ) {
+	function ElementWatcher( watchItem, offsets ) {
 		var self = this;
 
 		this.watchItem = watchItem;
-		this.container = container;
-
+		
 		if (!offsets) {
 			this.offsets = defaultOffsets;
 		} else if (offsets === +offsets) {
 			this.offsets = {top: offsets, bottom: offsets};
 		} else {
-			this.offsets = {
-				top: offsets.top || defaultOffsets.top,
-				bottom: offsets.bottom || defaultOffsets.bottom
-			};
+			this.offsets = $.extend({}, defaultOffsets, offsets);
 		}
 
 		this.callbacks = {}; // {callback: function, isOne: true }
 
-		for (var i = 0, j = eventTypes.length; i < j; i++) {
-			self.callbacks[eventTypes[i]] = [];
-		}
+		eventTypes.forEach(function(type) {
+			self.callbacks[type] = [];
+		});
 
 		this.locked = false;
 
@@ -147,7 +127,7 @@
 			}
 		}
 		this.triggerCallbacks = function triggerCallbacks() {
-
+			
 			if (this.isInViewport && !wasInViewport) {
 				triggerCallbackArray( this.callbacks[ENTERVIEWPORT] );
 			}
@@ -155,12 +135,12 @@
 				triggerCallbackArray( this.callbacks[FULLYENTERVIEWPORT] );
 			}
 
-
-			if (this.isAboveViewport !== wasAboveViewport &&
+			
+			if (this.isAboveViewport !== wasAboveViewport && 
 				this.isBelowViewport !== wasBelowViewport) {
 
 				triggerCallbackArray( this.callbacks[VISIBILITYCHANGE] );
-
+				
 				// if you skip completely past this element
 				if (!wasFullyInViewport && !this.isFullyInViewport) {
 					triggerCallbackArray( this.callbacks[FULLYENTERVIEWPORT] );
@@ -207,10 +187,10 @@
 				if (cachedDisplay === 'none') {
 					this.watchItem.style.display = '';
 				}
-
-				var boundingRect = this.watchItem.getBoundingClientRect();
-				this.top = boundingRect.top + exports.viewportTop;
-				this.bottom = boundingRect.bottom + exports.viewportTop;
+				
+				var elementLocation = $(this.watchItem).offset();
+				this.top = elementLocation.top;
+				this.bottom = elementLocation.top + this.watchItem.offsetHeight;
 
 				if (cachedDisplay === 'none') {
 					this.watchItem.style.display = cachedDisplay;
@@ -256,14 +236,14 @@
 				case event === FULLYENTERVIEWPORT && this.isFullyInViewport:
 				case event === EXITVIEWPORT && this.isAboveViewport && !this.isInViewport:
 				case event === PARTIALLYEXITVIEWPORT && this.isAboveViewport:
-					callback.call( this, latestEvent );
+					callback();
 					if (isOne) {
 						return;
 					}
 			}
 
 			if (this.callbacks[event]) {
-				this.callbacks[event].push({callback: callback, isOne: isOne||false});
+				this.callbacks[event].push({callback: callback, isOne: isOne});
 			} else {
 				throw new Error('Tried to add a scroll monitor listener of type '+event+'. Your options are: '+eventTypes.join(', '));
 			}
@@ -288,26 +268,21 @@
 			this.bottom = this.top + this.height;
 		},
 		update: function() {
-			var thisRect;
-			// support for scrollable containers
-			if(this.container){
-				thisRect = this.watchItem.getBoundingClientRect();
-			} else {
-				thisRect = this;
-			}
-			this.isAboveViewport = thisRect.top < exports.viewportTop;
-			this.isBelowViewport = thisRect.bottom > exports.viewportBottom;
-			this.isInViewport = (thisRect.top <= exports.viewportBottom && thisRect.bottom >= exports.viewportTop);
-			this.isFullyInViewport = (thisRect.top >= exports.viewportTop && thisRect.bottom <= exports.viewportBottom) ||
-			(thisRect.isAboveViewport && thisRect.isBelowViewport);
+			this.isAboveViewport = this.top < exports.viewportTop;
+			this.isBelowViewport = this.bottom > exports.viewportBottom;
+
+			this.isInViewport = (this.top <= exports.viewportBottom && this.bottom >= exports.viewportTop);
+			this.isFullyInViewport = (this.top >= exports.viewportTop && this.bottom <= exports.viewportBottom) ||
+								 (this.isAboveViewport && this.isBelowViewport);
+
 		},
 		destroy: function() {
 			var index = watchers.indexOf(this),
 				self  = this;
 			watchers.splice(index, 1);
-			for (var i = 0, j = eventTypes.length; i < j; i++) {
-				self.callbacks[eventTypes[i]].length = 0;
-			}
+			eventTypes.forEach(function(type) {
+				self.callbacks[type].length = 0;
+			});
 		},
 		// prevent recalculating the element location
 		lock: function() {
@@ -318,26 +293,14 @@
 		}
 	};
 
-	var eventHandlerFactory = function (type) {
-		return function( callback, isOne ) {
+	eventTypes.forEach(function( type ) {
+		ElementWatcher.prototype[type] = function( callback, isOne) {
 			this.on.call(this, type, callback, isOne);
 		};
-	};
+	});
 
-	for (var i = 0, j = eventTypes.length; i < j; i++) {
-		var type =  eventTypes[i];
-		ElementWatcher.prototype[type] = eventHandlerFactory(type);
-	}
 
-	try {
-		calculateViewport();
-	} catch (e) {
-		try {
-			window.$(calculateViewport);
-		} catch (e) {
-			throw new Error('If you must put scrollMonitor in the <head>, you must use jQuery.');
-		}
-	}
+	calculateViewport();
 
 	function scrollMonitorListener(event) {
 		latestEvent = event;
@@ -345,62 +308,17 @@
 		updateAndTriggerWatchers();
 	}
 
-	if (window.addEventListener) {
-		window.addEventListener('scroll', scrollMonitorListener);
-		window.addEventListener('resize', debouncedRecalcuateAndTrigger);
-	} else {
-		// Old IE support
-		window.attachEvent('onscroll', scrollMonitorListener);
-		window.attachEvent('onresize', debouncedRecalcuateAndTrigger);
-	}
+	$window.on('scroll', scrollMonitorListener);
+	$window.on('resize', debouncedRecalcuateAndTrigger);
 
-
-	function hasClass(el, className){
-		var out;
-		if (el.classList) {
-			out = el.classList.contains(className);
-		} else {
-			out = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-		}
-		return out;
-	}
-
-
-	function addClass(el, className){
-		if (el.classList) {
-			el.classList.add(className);
-		} else {
-			el.className += ' ' + className;
-		}
-	}
-
-
-
-	exports.getContainers = function(){
-		return containers.slice(0);
-	};
-
-	exports.beget = exports.create = function( element, offsets, options ) {
-		var container = options && options.container;
-		var className = "sm-watching";
+	exports.beget = exports.create = function( element, offsets ) {
 		if (typeof element === 'string') {
-			element = document.querySelector(element);
-		} else if (element && element.length > 0) {
+			element = $(element)[0];
+		}
+		if (element instanceof $) {
 			element = element[0];
 		}
-		if(container){
-			if (typeof container === 'string') {
-				container = document.querySelector(container);
-			} else if (container && container.length > 0) {
-				container = container[0];
-			}
-			// add a class so we don't attach more than one listener to this element
-			if(!hasClass(container, className)){
-				addClass(container, className);
-				container.addEventListener("scroll", scrollMonitorListener );
-			}
-		}
-		var watcher = new ElementWatcher( element, offsets, container );
+		var watcher = new ElementWatcher( element, offsets );
 		watchers.push(watcher);
 		watcher.update();
 		return watcher;
@@ -415,6 +333,6 @@
 		exports.documentHeight = 0;
 		exports.update();
 	};
-
+	
 	return exports;
 });
