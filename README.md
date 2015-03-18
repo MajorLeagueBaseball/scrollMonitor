@@ -1,17 +1,11 @@
 scrollMonitor
 =============
 
-TODO: document support for watching items in absolutely positioned, scrollable containers (like a bootstrap modal)
-
 The scroll monitor allows you to receive events when elements enter or exit the viewport. It does this using watcher objects, which watch an element and trigger events. Watcher objects also contain information about the element they watch, including the element's visibility and location relative to the viewport.
 
 The scroll monitor was designed to be very fast. On each scroll event the DOM is only touched twice, once to find the document height and again to find the viewport top. No variables are declared, nor are any objects, arrays, or strings created.
 
-The code is based on vanilla javascript and has no external dependencies. Except if you want to put it in the head of the document, then you'll need jQuery for the DOMContentLoaded event.
-
 Watchers are _very_ cheap. Create them liberally.
-
-[![browser support](http://ci.testling.com/sakabako/scrollMonitor.png)](http://ci.testling.com/sakabako/scrollMonitor)
 
 ## Basic Usage
 
@@ -37,7 +31,7 @@ elementWatcher.exitViewport(function() {
 
 ## Watcher Objects
 
-Create watcher objects with `scrollMonitor.create( watchItem )`. An optional second argument lets you receive events before or after this element enters the viewport. _See "[Offsets](#offsets)"_.
+Create watcher objects with `scrollMonitor.create( watchItem )`. An optional second argument lets you receive events before or after this element enters the viewport. _See "[Offsets](#offsets)"_.  An optional third arguments lets you create a watcher object on a container other than the document's window.
 
 `watchItem` can be one of the following:
 
@@ -45,7 +39,6 @@ Create watcher objects with `scrollMonitor.create( watchItem )`. An optional sec
 * **Object** - `obj.top` and `obj.bottom` will be used for watcher.top and watcher.bottom.
 * **Number** - the watcher will watch a 1px area this many pixels from the top. Negative numbers will watch from the bottom.
 * **jQuery object** - it will use the first DOM element.
-* **NodeList** or **Array** - it will use the first DOM element.
 * **string** - it will use the string as a CSS selector and watch the first match.
 
 Watchers are automatically recalculated on the first scroll event after the height of the document changes.
@@ -113,7 +106,7 @@ Because the watcher was locked on the second line, the scroll monitor will never
 
 If you want to trigger an event when the edge of an element is near the edge of the viewport, you can use offsets. The offset is the second argument to `scrollMonitor.create`.
 
-This will trigger events when an element gets within 200px of the viewport:
+This will trigger events when an element gets within 200px of the viewport: 
 ```javascript
 scrollMonitor.create( element, 200 )
 ```
@@ -123,7 +116,7 @@ This will trigger when the element is 200px inside the viewport:
 scrollMonitor.create( element, -200 )
 ```
 
- If you only want it to affect the top and bottom differently you can send an object in.
+ If you only want it to affect the top and bottom differently you can send an object in. 
  ```javascript
  scrollMonitor.create( element, {top: 200, bottom: 50})
  ```
@@ -136,13 +129,13 @@ scrollMonitor.create( element, -200 )
 ## scrollMonitor Module
 
 ### Methods
-* `scrollMonitor.create( watchItem, offsets )` - Returns a new watcher. `watchItem` is a DOM element, jQuery object, NodeList, CSS selector, object with .top and .bottom, or a number.
-* `scrollMonitor.update()` - update and trigger all watchers.
-* `scrollMonitor.recalculateLocations()` - recalculate the location of all unlocked watchers and trigger if needed.
+For all methods you can pass an optional jQuery object to access the scrollMonitor instance attached to that jQuery object.
 
-### Properties
-* `scrollMonitor.viewportTop` - distance from the top of the document to the top of the viewport.
-* `scrollMonitor.viewportBottom` - distance from the top of the document to the bottom of the viewport.
-* `scrollMonitor.viewportHeight` - height of the viewport.
-* `scrollMonitor.documentHeight` - height of the document.
+* `scrollMonitor.create( watchItem, offsets, container )` - Returns a new watcher. `watchItem` is a DOM element, jQuery object, CSS selector, object with .top and .bottom, or a number.
+* `scrollMonitor.update( container )` - update and trigger all watchers.
+* `scrollMonitor.recalculateLocations( container )` - recalculate the location of all unlocked watchers and trigger if needed.
 
+* `scrollMonitor.viewportTop( container )` - distance from the top of the document to the top of the viewport.
+* `scrollMonitor.viewportBottom( container )` - distance from the top of the document to the bottom of the viewport.
+* `scrollMonitor.viewportHeight( container )` - height of the viewport.
+* `scrollMonitor.documentHeight( container )` - height of the document.
