@@ -1,6 +1,6 @@
 {
   "name": "scrollmonitor",
-  "version": "1.0.3",
+  "version": "1.0.13",
   "author": "Stu Kabakoff <stukabakoff@gmail.com>",
   "description": "A simple and fast API to monitor DOM elements as you scroll",
   "contributors": [ 
@@ -11,6 +11,10 @@
 	{
 	  "name": "Terrence Lee",
 	  "email": "mr.lee@terrenceishere.com"
+	},
+	{
+	  "name": "Caleb Olin",
+	  "email": "calebolin7@gmail.com"
 	}
   ],
   "repository": {
