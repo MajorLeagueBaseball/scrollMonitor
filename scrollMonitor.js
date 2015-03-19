@@ -346,7 +346,6 @@
 		destroy: function() {
 			var index = this.scrollMonitor.watchers.indexOf(this),
 				self  = this;
-			console.log("index:" + index);
 			this.scrollMonitor.watchers.splice(index, 1);
 			eventTypes.forEach(function(type) {
 				self.callbacks[type].length = 0;
