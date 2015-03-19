@@ -3,7 +3,7 @@
   "version": "1.0.3",
   "author": "Stu Kabakoff <stukabakoff@gmail.com>",
   "description": "A simple and fast API to monitor DOM elements as you scroll",
-  "contributors": [ 
+  "contributors": [
 	{
 	  "name": "Stu Kabakoff",
 	  "email": "stukabakoff@gmail.com"
