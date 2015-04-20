@@ -31,7 +31,25 @@ elementWatcher.exitViewport(function() {
 
 ## Watcher Objects
 
-Create watcher objects with `scrollMonitor.create( watchItem )`. An optional second argument lets you receive events before or after this element enters the viewport. _See "[Offsets](#offsets)"_.  An optional third arguments lets you create a watcher object on a container other than the document's window.
+Create watcher objects with `scrollMonitor.create( watchItem )`.
+
+An optional second argument lets you pass an options hash in. Currently available options are:
+
+* offsets: lets you receive events before or after this element enters the viewport. _See "[Offsets](#offsets)"_.
+* checkVisibility: if true, take the element's visibility into account when determining whether it's in the viewport. Default is false.
+* $container: lets you create a watcher object on a container other than the document's window. Must be a jquery object.
+
+```javascript
+var scrollMonitor = require("./scrollMonitor"); // if you're not using require, you can use the scrollMonitor global.
+var myElement = document.getElementById("itemToWatch");
+
+var elementWatcher = scrollMonitor.create( myElement, {
+   offsets: 100,
+   checkVisibility: true,
+   $container: $("#myScrollableContainer")
+});
+```
+
 
 `watchItem` can be one of the following:
 
@@ -104,26 +122,26 @@ Because the watcher was locked on the second line, the scroll monitor will never
 
 ### Offsets
 
-If you want to trigger an event when the edge of an element is near the edge of the viewport, you can use offsets. The offset is the second argument to `scrollMonitor.create`.
+If you want to trigger an event when the edge of an element is near the edge of the viewport, you can use offsets. "offsets" is a property of the second argument to `scrollMonitor.create`.
 
 This will trigger events when an element gets within 200px of the viewport: 
 ```javascript
-scrollMonitor.create( element, 200 )
+scrollMonitor.create( element, {offsets: 200} )
 ```
 
 This will trigger when the element is 200px inside the viewport:
 ```javascript
-scrollMonitor.create( element, -200 )
+scrollMonitor.create( element, {offsets: -200)
 ```
 
  If you only want it to affect the top and bottom differently you can send an object in. 
  ```javascript
- scrollMonitor.create( element, {top: 200, bottom: 50})
+ scrollMonitor.create( element, {offsets:{top: 200, bottom: 50}})
  ```
 
  If you only want it to affect the top and not the bottom you can use only one property in.
  ```javascript
- scrollMonitor.create( element, {top: 200})
+ scrollMonitor.create( element, {offsets:{top: 200}})
  ```
 
 ## scrollMonitor Module
@@ -131,7 +149,7 @@ scrollMonitor.create( element, -200 )
 ### Methods
 For all methods you can pass an optional jQuery object to access the scrollMonitor instance attached to that jQuery object.
 
-* `scrollMonitor.create( watchItem, offsets, container )` - Returns a new watcher. `watchItem` is a DOM element, jQuery object, CSS selector, object with .top and .bottom, or a number.
+* `scrollMonitor.create( watchItem, options )` - Returns a new watcher. `watchItem` is a DOM element, jQuery object, CSS selector, object with .top and .bottom, or a number.
 * `scrollMonitor.update( container )` - update and trigger all watchers.
 * `scrollMonitor.recalculateLocations( container )` - recalculate the location of all unlocked watchers and trigger if needed.
 
