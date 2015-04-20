@@ -99,14 +99,15 @@
 				this.watchers[updateAndTriggerWatchersI].triggerCallbacks();
 			}
 		},
-		create: function( element, offsets ) {
+		create: function( element, options ) {
 			if (typeof element === 'string') {
 				element = $(element)[0];
 			}
 			if (element instanceof $) {
 				element = element[0];
 			}
-			var watcher = new ElementWatcher( element, offsets, this );
+			options.scrollMonitor = this;
+			var watcher = new ElementWatcher( element, options );
 			this.watchers.push(watcher);
 			watcher.update();
 			return watcher;
@@ -122,11 +123,13 @@
 		}
 	};
 
-	function ElementWatcher( watchItem, offsets, scrollMonitor ) {
-		var self = this;
+	function ElementWatcher( watchItem, options ) {
+		var self = this,
+			offsets = options.offsets;
 
 		this.watchItem = watchItem;
-		this.scrollMonitor = scrollMonitor;
+		this.scrollMonitor = options.scrollMonitor;
+		this.checkVisibility = options.checkVisibility;
 
 		if (!offsets) {
 			this.offsets = defaultOffsets;
@@ -259,15 +262,6 @@
 			}
 		};
 
-		// returns true if every property is 0
-		this.displayNone = function displayNone(obj) {
-			for (var prop in obj) {
-				if (obj[prop] !== 0) {
-					return false;
-				}
-			}
-			return true;
-		};
 
 		this.recalculateLocation();
 
@@ -324,13 +318,13 @@
 			this.bottom = this.top + this.height;
 		},
 		update: function() {
-			var thisRect;
+			var thisRect, isVisible = $(this.watchItem).is(":visible");
 			if(isWindowScrollMonitor(this.scrollMonitor.$container)){
 				thisRect = this;
 			} else {
 				thisRect = this.watchItem.getBoundingClientRect();
 			}
-			if(this.displayNone(thisRect)){
+			if(this.checkVisibility && !isVisible){
 				this.isAboveViewport = false;
 				this.isBelowViewport = false;
 				this.isInViewport = false;
@@ -386,13 +380,15 @@
 			return $container.data('scrollMonitor');
 		}
 	};
-	exports.beget = exports.create = function( element, offsets, $container ) {
-		var scrollMonitor = isWindowScrollMonitor($container) ? windowScrollMonitor : $container.data('scrollMonitor');
+	exports.beget = exports.create = function( element, options ) {
+		var $container = options.$container,
+			scrollMonitor = isWindowScrollMonitor($container) ? windowScrollMonitor : $container.data('scrollMonitor');
+
 		if ($container && !scrollMonitor) {
 			scrollMonitor = new ScrollMonitor($container);
 			$container.data('scrollMonitor', scrollMonitor);
 		}
-		return scrollMonitor.create(element, offsets);
+		return scrollMonitor.create(element, options);
 	};
 	exports.update = function( $container ) {
 		this.getInstance($container).update();
