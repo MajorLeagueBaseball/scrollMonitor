@@ -40,9 +40,6 @@ An optional second argument lets you pass an options hash in. Currently availabl
 * $container: lets you create a watcher object on a container other than the document's window. Must be a jquery object.
 
 ```javascript
-var scrollMonitor = require("./scrollMonitor"); // if you're not using require, you can use the scrollMonitor global.
-var myElement = document.getElementById("itemToWatch");
-
 var elementWatcher = scrollMonitor.create( myElement, {
    offsets: 100,
    checkVisibility: true,
@@ -131,17 +128,17 @@ scrollMonitor.create( element, {offsets: 200} )
 
 This will trigger when the element is 200px inside the viewport:
 ```javascript
-scrollMonitor.create( element, {offsets: -200)
+scrollMonitor.create( element, {offsets: -200} )
 ```
 
  If you only want it to affect the top and bottom differently you can send an object in. 
  ```javascript
- scrollMonitor.create( element, {offsets:{top: 200, bottom: 50}})
+ scrollMonitor.create( element, {offsets:{top: 200, bottom: 50}} )
  ```
 
  If you only want it to affect the top and not the bottom you can use only one property in.
  ```javascript
- scrollMonitor.create( element, {offsets:{top: 200}})
+ scrollMonitor.create( element, {offsets:{top: 200}} )
  ```
 
 ## scrollMonitor Module
